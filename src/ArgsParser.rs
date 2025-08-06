@@ -1,13 +1,13 @@
 use std::process::exit;
 
 pub struct ParserChoices{
-    //选择模式 -f ----> 文件   -d ----> 文件夹
+    //choose mode -f ----> file   -d ----> directory
     pub modeSelection:String,
-    //要转换为灰度图像的类型
+    //8-bit? 16-bit?
     pub FormatSelection:String,
-    //存放位置
+    //where is to-be translated ?
     pub target:String,
-    //存放目的地
+    //where to store
     pub destination:String,
 }
 

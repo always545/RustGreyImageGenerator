@@ -10,12 +10,12 @@ use anyhow::{Context,Result};
 pub fn handle_file_or_dir(parser_choice: &ParserChoices) -> () {
     let target_path = Path::new(parser_choice.target.as_str());
     let destPathbuf = std::path::PathBuf::from(&parser_choice.destination);
-    //判断路径是不是存在对象的
+    //is target right?
     if !target_path.exists() {
         panic!("file not found at {:?}", target_path)
     }
     let target_buf = target_path.to_path_buf();
-    //是文件的情况
+    //file
     if parser_choice.modeSelection.eq("-f"){
         //this is the image we want
         let img = image::open(&target_buf).expect("could not open image file");
@@ -40,13 +40,13 @@ fn dir_handler(mode:&String,target:&PathBuf,destination:&PathBuf) -> (){
         |e| e.file_type().unwrap().is_file() || e.file_type().unwrap().is_dir()
     ).into_iter();
     for item in dir{
-        //文件的情况
+        //file
         if item.file_type().unwrap().is_file() {
             let img = image::open(&item.path()).unwrap();
             file_handler(&img,mode,destination);
         }
         else if item.file_type().unwrap().is_dir() {
-            //文件夹的情况
+            //directory
             dir_handler(mode,target,destination);
         }
     }
@@ -55,7 +55,14 @@ fn dir_handler(mode:&String,target:&PathBuf,destination:&PathBuf) -> (){
 
 
 /*
-@param destination:目的地
+@param destination:where to store
+
+do not use like dirhandler(...){
+    if(is_dir){
+        dirhandler(...)
+        }
+}
+stack over flow!!!
  */
 fn dir_handler_rewrite(mode: &str, target: &Path, destination: &Path) -> Result<()> {
     let mut dir_queue = VecDeque::new();
@@ -70,11 +77,11 @@ fn dir_handler_rewrite(mode: &str, target: &Path, destination: &Path) -> Result<
         {
             let src_path = entry.path();
 
-            //获得相对路径
+            //relative path
             let relative_path = src_path
                 .strip_prefix(target)
-                .context("路径剥离失败")?;
-            //保存路径
+                .context("strip prefix failed")?;
+            //destination 
             let dest_path = destination.join(relative_path);
 
             if entry.file_type().is_dir() {
@@ -82,7 +89,7 @@ fn dir_handler_rewrite(mode: &str, target: &Path, destination: &Path) -> Result<
                     .context(format!("failed create dir: {}", dest_path.display()))?;
                 dir_queue.push_back(src_path.to_path_buf());
             } else {
-                //文件情况，先检查父目录是否存在
+                //file, check parent dir
                 fs::create_dir_all(dest_path.parent().unwrap())
                     .context(format!("failed create parent dir: {}", dest_path.display()))?;
 
